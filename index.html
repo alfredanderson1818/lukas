@@ -209,6 +209,22 @@
   .inlinecur .hint{font-size:13px;color:var(--blue);font-weight:700;}
   .amtwrap{text-align:right;white-space:nowrap;}
   .amtsub{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:1px;}
+  .row{cursor:pointer;}
+  .row:active{background:rgba(37,99,235,.04);}
+  /* Gráfico de gastos por día */
+  .daily{display:flex;align-items:flex-end;gap:3px;height:118px;padding-top:6px;}
+  .dcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px;min-width:0;}
+  .dbar{width:100%;max-width:12px;border-radius:4px;background:linear-gradient(180deg,#5b8def,#2563eb);transition:height .5s cubic-bezier(.2,.8,.2,1);}
+  .dbar.today{background:linear-gradient(180deg,#34d27b,#16a34a);}
+  .dbar.empty{background:var(--ring-empty);}
+  .dlbl{font-size:8.5px;color:var(--muted);font-weight:700;height:10px;line-height:1;}
+  /* Modal / hoja de edición */
+  .modal{position:fixed;inset:0;z-index:60;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;justify-content:center;}
+  .modal.hide{display:none;}
+  .modal-card{width:100%;max-width:560px;background:var(--surface);border-radius:24px 24px 0 0;
+    padding:20px 20px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.22);
+    max-height:92vh;overflow:auto;animation:sheet .32s cubic-bezier(.2,.8,.2,1);}
+  @keyframes sheet{from{transform:translateY(100%)}to{transform:none}}
 </style>
 </head>
 <body>
@@ -302,6 +318,12 @@
     </div>
 
     <div class="card anim" style="animation-delay:.18s">
+      <div class="sectitle" style="margin-top:0;">Gastos por d&iacute;a (este mes)</div>
+      <div class="daily" id="daily"></div>
+      <div class="note" id="dailyCap" style="margin:10px 3px 0;"></div>
+    </div>
+
+    <div class="card anim" style="animation-delay:.22s">
       <div class="sectitle" style="margin-top:0;">Tendencia mensual</div>
       <div class="trend" id="trend"></div>
     </div>
@@ -438,6 +460,38 @@
     <p class="note" style="text-align:center;opacity:.8;">Lukas &middot; App de gastos &middot; v1.0</p>
   </section>
 
+</div>
+
+<div id="editModal" class="modal hide" onclick="if(event.target===this)closeEdit()">
+  <div class="modal-card">
+    <div class="sectitle" style="margin-top:0;display:flex;justify-content:space-between;align-items:center;">
+      <span>Editar gasto</span>
+      <button class="del" onclick="closeEdit()" style="width:auto;font-size:24px;color:var(--faint);">&times;</button>
+    </div>
+    <div class="mb"><label>Descripci&oacute;n</label><input id="eDesc"></div>
+    <div class="grid2">
+      <div><label>Monto</label><input id="eMonto" type="number" step="0.01" min="0" placeholder="0.00" oninput="updateEditHint()">
+        <div class="inlinecur">
+          <div class="seg seg-sm"><button id="eUsd" onclick="setECur('$')">$</button><button id="eBs" onclick="setECur('Bs')">Bs</button><button id="eEur" onclick="setECur('&euro;')">&euro;</button></div>
+          <span class="hint" id="eHint"></span>
+        </div>
+      </div>
+      <div><label>Categor&iacute;a</label>
+        <select id="eCat">
+          <option>Comida</option><option>Transporte</option><option>Servicios</option>
+          <option>Vivienda</option><option>Salud</option><option>Educaci&oacute;n</option>
+          <option>Entretenimiento</option><option>Compras</option><option>Hogar</option>
+          <option>Personal</option><option>Viajes</option><option>Suscripciones</option>
+          <option>Seguros</option><option>Impuestos</option><option>Bancos</option>
+          <option>Ahorro</option><option>Oficina</option><option>N&oacute;mina</option>
+          <option>Marketing</option><option>Otros</option>
+        </select>
+      </div>
+    </div>
+    <div class="mb"><label>Fecha</label><input id="eFecha" type="date" lang="es-ES"></div>
+    <button class="btn" onclick="saveEdit()">Guardar cambios</button>
+    <button class="btn ghost" style="margin-top:10px;color:#ff3b30;border-color:rgba(255,59,48,.28);" onclick="deleteFromEdit()">Eliminar gasto</button>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -744,6 +798,57 @@
   }
   function delGasto(id){gastos=gastos.filter(g=>g.id!==id);saveG();render();}
 
+  /* ---- Editar un gasto ---- */
+  let editId=null, eCurIn='$';
+  function editGasto(id){
+    const g=gastos.find(x=>x.id===id); if(!g)return;
+    editId=id;
+    document.getElementById('eDesc').value=g.desc;
+    document.getElementById('eCat').value=g.cat;
+    document.getElementById('eFecha').value=g.fecha;
+    const oc=(g.in&&g.in.cur)?g.in.cur:'$';
+    let amt;
+    if(g.in&&g.in.amount&&g.in.cur===oc)amt=g.in.amount;
+    else if(oc==='Bs')amt=Math.round(bsOf(g));
+    else if(oc==='€'){const e=eurUsd();amt=e?Math.round(g.monto/e*100)/100:Math.round(g.monto*100)/100;}
+    else amt=Math.round(g.monto*100)/100;
+    document.getElementById('eMonto').value=amt;
+    setECur(oc);
+    document.getElementById('editModal').classList.remove('hide');
+  }
+  function setECur(c){eCurIn=c;
+    document.getElementById('eUsd').classList.toggle('on',c==='$');
+    document.getElementById('eBs').classList.toggle('on',c==='Bs');
+    document.getElementById('eEur').classList.toggle('on',c==='€');
+    updateEditHint();}
+  function updateEditHint(){
+    const raw=parseFloat(document.getElementById('eMonto').value);const h=document.getElementById('eHint');if(!h)return;
+    if(isNaN(raw)){h.textContent='';return;}
+    const g=gastos.find(x=>x.id===editId); const rate=(g&&rOf(g))||activeRate;
+    let usd;
+    if(eCurIn==='$')usd=raw; else if(eCurIn==='Bs')usd=rate?raw/rate:NaN; else {const e=eurUsd();usd=e?raw*e:NaN;}
+    if(isNaN(usd)){h.textContent='cargando tasa…';return;}
+    if(eCurIn==='$')h.textContent=rate?('= Bs '+numBs(raw*rate)):'';
+    else h.textContent='= $ '+num(usd);
+  }
+  function saveEdit(){
+    const g=gastos.find(x=>x.id===editId); if(!g)return;
+    const d=document.getElementById('eDesc').value.trim();
+    const raw=parseFloat(document.getElementById('eMonto').value);
+    if(!d||isNaN(raw)){alert('Completá la descripción y el monto.');return;}
+    const rate=rOf(g)||activeRate;
+    let usd;
+    if(eCurIn==='$')usd=raw;
+    else if(eCurIn==='Bs'){if(!rate){alert('Falta la tasa de cambio.');return;}usd=raw/rate;}
+    else {const e=eurUsd(); if(!e){alert('Esperá a que carguen las tasas.');return;} usd=raw*e;}
+    g.desc=d; g.monto=usd; g.cat=document.getElementById('eCat').value; g.fecha=document.getElementById('eFecha').value;
+    if(!g.rate)g.rate=rate;
+    g.in={cur:eCurIn,amount:raw};
+    closeEdit(); saveG(); render();
+  }
+  function deleteFromEdit(){ if(editId!=null&&confirm('¿Eliminar este gasto?')){const id=editId;closeEdit();delGasto(id);} }
+  function closeEdit(){editId=null;document.getElementById('editModal').classList.add('hide');}
+
   function totalFijos(){return fijos.reduce((s,f)=>s+(+f.monto||0),0);}
   function varMes(k){return gastos.filter(g=>mk(g.fecha)===k).reduce((s,g)=>s+g.monto,0);}
 
@@ -864,6 +969,28 @@
         '<div class="bar" style="height:'+h+'%;'+(isNow?'':'opacity:.38;')+'"></div>'+
         '<div class="ml">'+mesCorto(k)+'</div></div>';
     }).join('');
+    renderDaily();
+  }
+
+  function renderDaily(){
+    const box=document.getElementById('daily'); if(!box)return;
+    const d=new Date(), y=d.getFullYear(), m=d.getMonth(), today=d.getDate();
+    const key=new Date(y,m,1).toISOString().slice(0,7);
+    const dim=new Date(y,m+1,0).getDate();
+    const byDay=new Array(dim+1).fill(0);
+    monthG(key).forEach(g=>{const dd=parseInt(g.fecha.slice(8,10),10);if(dd>=1&&dd<=dim)byDay[dd]+=dispOf(g);});
+    const vals=byDay.slice(1);
+    const max=Math.max.apply(null,vals.concat([1]));
+    box.innerHTML=vals.map((v,i)=>{
+      const day=i+1, h=v>0?Math.max(v/max*100,4):3, isToday=day===today;
+      const lbl=(day===1||day===today||(day%5===0&&Math.abs(day-today)>1))?day:'';
+      return '<div class="dcol" title="Día '+day+': '+money(v)+'">'+
+        '<div class="dbar'+(isToday?' today':'')+(v>0?'':' empty')+'" style="height:'+h+'%"></div>'+
+        '<div class="dlbl">'+lbl+'</div></div>';
+    }).join('');
+    const cap=document.getElementById('dailyCap');
+    if(cap){const tot=vals.reduce((a,b)=>a+b,0), mi=vals.indexOf(Math.max.apply(null,vals));
+      cap.textContent= tot>0 ? ('Total variables del mes: '+money(tot)+'  ·  día más alto: '+(mi+1)+' ('+money(vals[mi])+')') : 'Sin gastos variables este mes todavía.';}
   }
 
   function renderFijos(){
@@ -890,11 +1017,11 @@
     const box=document.getElementById('lista');
     box.innerHTML=vis.length?vis.map(g=>{
       const col=C[g.cat]||'#a0a0a8';const fe=g.fecha.split('-').reverse().join('/');
-      return '<div class="row">'+
+      return '<div class="row" onclick="editGasto('+g.id+')">'+
         '<span class="dot" style="background:'+col+'22;color:'+col+'">'+(ICON[g.cat]||'\u2022')+'</span>'+
         '<div class="meta"><div class="desc">'+esc(g.desc)+'</div><div class="tags">'+g.cat+' \u00b7 '+fe+'</div></div>'+
         '<div class="amtwrap"><div class="amt" style="color:'+col+'">'+fmtItem(g)+'</div><div class="amtsub">'+fmtItemOther(g)+'</div></div>'+
-        '<button class="del" onclick="delGasto('+g.id+')">\u00d7</button>'+
+        '<button class="del" onclick="event.stopPropagation();delGasto('+g.id+')">\u00d7</button>'+
       '</div>';
     }).join(''):'<div class="empty">A\u00fan no hay gastos variables.</div>';
   }
