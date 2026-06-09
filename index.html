@@ -134,6 +134,9 @@
     border-radius:14px;background:var(--field);color:var(--ink);transition:.15s;}
   input::placeholder{color:var(--faint);}
   input:focus,select:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.15);}
+  input[type="date"]{-webkit-appearance:none;appearance:none;text-align:left;min-height:52px;}
+  input[type="date"]::-webkit-date-and-time-value{text-align:left;margin:0;}
+  input[type="date"]::-webkit-calendar-picker-indicator{opacity:.5;cursor:pointer;}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
   .mb{margin-bottom:12px;}
   .btn{width:100%;background:var(--blue);color:#fff;border:none;border-radius:15px;padding:16px;
@@ -176,6 +179,17 @@
   .btn.ghost:active{filter:none;background:var(--field);}
   .login-skip{margin-top:22px;background:none;border:none;color:var(--muted);font-family:var(--font-text);font-size:14px;font-weight:600;cursor:pointer;padding:6px;}
   .login-skip:active{color:var(--ink);}
+  /* Página de cuenta */
+  .profhead{display:flex;align-items:center;gap:14px;}
+  .profhead .big{width:54px;height:54px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#2563eb,#5b8def);color:#fff;font-family:var(--font-display);font-weight:800;font-size:22px;box-shadow:0 4px 12px rgba(37,99,235,.3);}
+  .profhead .who{min-width:0;}
+  .profhead .who .nm{font-size:17px;font-weight:700;}
+  .profhead .who .em{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .stats{display:flex;gap:10px;margin-top:16px;}
+  .stat{flex:1;background:var(--field);border-radius:14px;padding:13px 8px;text-align:center;min-width:0;}
+  .stat .v{font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--ink);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .stat .t{font-size:11px;color:var(--muted);font-weight:600;margin-top:3px;}
 </style>
 </head>
 <body>
@@ -250,12 +264,16 @@
         <div><label>Categor&iacute;a</label>
           <select id="cat">
             <option>Comida</option><option>Transporte</option><option>Servicios</option>
-            <option>Oficina</option><option>N&oacute;mina</option><option>Marketing</option>
-            <option>Personal</option><option>Otros</option>
+            <option>Vivienda</option><option>Salud</option><option>Educaci&oacute;n</option>
+            <option>Entretenimiento</option><option>Compras</option><option>Hogar</option>
+            <option>Personal</option><option>Viajes</option><option>Suscripciones</option>
+            <option>Seguros</option><option>Impuestos</option><option>Bancos</option>
+            <option>Ahorro</option><option>Oficina</option><option>N&oacute;mina</option>
+            <option>Marketing</option><option>Otros</option>
           </select>
         </div>
       </div>
-      <div class="mb"><label>Fecha</label><input id="fecha" type="date"></div>
+      <div class="mb"><label>Fecha</label><input id="fecha" type="date" lang="es-ES"></div>
       <button class="btn" onclick="addGasto()">Agregar gasto</button>
     </div>
 
@@ -282,9 +300,13 @@
       <div class="grid2">
         <div><label>Categor&iacute;a</label>
           <select id="fCat">
-            <option>Servicios</option><option>Oficina</option><option>N&oacute;mina</option>
-            <option>Marketing</option><option>Personal</option><option>Comida</option>
-            <option>Transporte</option><option>Otros</option>
+            <option>Vivienda</option><option>Servicios</option><option>Suscripciones</option>
+            <option>Seguros</option><option>Salud</option><option>Educaci&oacute;n</option>
+            <option>Transporte</option><option>Impuestos</option><option>Bancos</option>
+            <option>Ahorro</option><option>Hogar</option><option>Personal</option>
+            <option>Oficina</option><option>N&oacute;mina</option><option>Marketing</option>
+            <option>Comida</option><option>Entretenimiento</option><option>Viajes</option>
+            <option>Compras</option><option>Otros</option>
           </select>
         </div>
         <div><label>Monto</label><input id="fMonto" type="number" step="0.01" min="0" placeholder="0.00"></div>
@@ -294,6 +316,21 @@
   </section>
 
   <section id="vSync" class="hide">
+    <div class="card hide" id="profileCard">
+      <div class="profhead">
+        <div class="big" id="profInit">&middot;</div>
+        <div class="who">
+          <div class="nm">Mi perfil</div>
+          <div class="em" id="profEmail">&mdash;</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="v" id="stMov">0</div><div class="t">Movimientos</div></div>
+        <div class="stat"><div class="v" id="stFij">$0</div><div class="t">Fijos / mes</div></div>
+        <div class="stat"><div class="v" id="stMes">$0</div><div class="t">Total mes</div></div>
+      </div>
+    </div>
+
     <div class="card" id="authOut">
       <div class="sectitle" style="margin-top:0;">Tu cuenta Lukas</div>
       <p class="note" style="margin-left:0;">Est&aacute;s usando Lukas <b>sin cuenta</b>. Inici&aacute; sesi&oacute;n para sincronizar tus gastos en todos tus dispositivos. Tus datos quedan privados, protegidos por tu cuenta.</p>
@@ -301,11 +338,13 @@
     </div>
 
     <div class="card hide" id="authIn">
-      <div class="sectitle" style="margin-top:0;">Sincronizaci&oacute;n</div>
+      <div class="sectitle" style="margin-top:0;display:flex;justify-content:space-between;align-items:center;">
+        <span>Sincronizaci&oacute;n</span>
+        <button class="del" style="width:auto;font-size:13px;font-weight:600;color:#ff3b30;" onclick="signOut()">Cerrar sesi&oacute;n</button>
+      </div>
       <div class="frow" style="border:none;padding:2px 2px 14px;">
         <span class="dot" style="background:#2563eb22;color:#2563eb">&#9729;</span>
         <div class="nm">Conectado<small id="authWho">&nbsp;</small></div>
-        <button class="del" style="width:auto;font-size:13px;font-weight:600;color:#ff3b30;" onclick="signOut()">Salir</button>
       </div>
       <div class="grid2" style="margin-bottom:0;">
         <button class="btn" style="box-shadow:none;background:#16a34a;" onclick="cloudPush()">&#8593; Guardar ahora</button>
@@ -316,7 +355,28 @@
       </label>
       <div class="note" id="syncStatus" style="margin:12px 3px 0;">Sin sincronizar todav&iacute;a.</div>
     </div>
+
+    <div class="card">
+      <div class="sectitle" style="margin-top:0;">Moneda</div>
+      <div class="seg" style="display:flex;">
+        <button id="curUSD2" onclick="setCur('$')" style="flex:1;">$ D&oacute;lares</button>
+        <button id="curBs2" onclick="setCur('Bs')" style="flex:1;">Bs Bol&iacute;vares</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sectitle" style="margin-top:0;">Tus datos</div>
+      <p class="note" style="margin-left:0;">Descarg&aacute; una copia de seguridad o restaur&aacute; tus datos desde un archivo.</p>
+      <div class="grid2" style="margin-bottom:0;">
+        <button class="btn ghost" onclick="exportData()">&#8595; Exportar copia</button>
+        <button class="btn ghost" onclick="document.getElementById('importFile').click()">&#8593; Importar copia</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" class="hide" onchange="importData(event)">
+      <button class="btn" style="background:#fff;color:#ff3b30;border:1.5px solid rgba(255,59,48,.28);box-shadow:none;margin-top:10px;" onclick="clearAll()">Borrar todos los datos</button>
+    </div>
+
     <p class="note">Tus datos se guardan en tu base Supabase con seguridad por fila (RLS): solo vos pod&eacute;s verlos, aunque la p&aacute;gina sea p&uacute;blica.</p>
+    <p class="note" style="text-align:center;opacity:.8;">Lukas &middot; App de gastos &middot; v1.0</p>
   </section>
 
 </div>
@@ -334,10 +394,16 @@
     {desc:'Suscripciones',cat:'Otros'},
   ];
 
-  const C={Comida:'#ff9f0a',Transporte:'#16a34a',Servicios:'#34bfe0',Oficina:'#2563eb',
-    'N\u00f3mina':'#af52de',Marketing:'#ff375f',Personal:'#5e5ce6',Otros:'#94a3b8'};
-  const ICON={Comida:'\ud83c\udf7d\ufe0f',Transporte:'\ud83d\ude97',Servicios:'\ud83d\udca1',Oficina:'\ud83c\udfe2',
-    'N\u00f3mina':'\ud83d\udc65',Marketing:'\ud83d\udce3',Personal:'\ud83d\udecd\ufe0f',Otros:'\u2022'};
+  const C={Comida:'#ff9f0a',Transporte:'#16a34a',Servicios:'#34bfe0',Vivienda:'#0ea5e9',
+    Salud:'#ef4444','Educaci\u00f3n':'#6366f1',Entretenimiento:'#ec4899',Compras:'#f97316',
+    Hogar:'#14b8a6',Personal:'#5e5ce6',Viajes:'#06b6d4',Suscripciones:'#8b5cf6',
+    Seguros:'#0891b2',Impuestos:'#64748b',Bancos:'#475569',Ahorro:'#22c55e',
+    Oficina:'#2563eb','N\u00f3mina':'#af52de',Marketing:'#ff375f',Otros:'#94a3b8'};
+  const ICON={Comida:'\ud83c\udf7d\ufe0f',Transporte:'\ud83d\ude97',Servicios:'\ud83d\udca1',Vivienda:'\ud83c\udfe0',
+    Salud:'\ud83e\ude7a','Educaci\u00f3n':'\ud83d\udcda',Entretenimiento:'\ud83c\udfac',Compras:'\ud83d\udecd\ufe0f',
+    Hogar:'\ud83d\udecb\ufe0f',Personal:'\ud83d\udc64',Viajes:'\u2708\ufe0f',Suscripciones:'\ud83d\udcfa',
+    Seguros:'\ud83d\udee1\ufe0f',Impuestos:'\ud83e\uddfe',Bancos:'\ud83c\udfe6',Ahorro:'\ud83d\udc37',
+    Oficina:'\ud83c\udfe2','N\u00f3mina':'\ud83d\udc65',Marketing:'\ud83d\udce3',Otros:'\u2022'};
 
   function num(n){return Number(n).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});}
   function fmt(n){return cur+' '+num(n);}
@@ -352,9 +418,7 @@
     try{const r=localStorage.getItem('gastos');if(r)gastos=JSON.parse(r);}catch(e){}
     try{const r=localStorage.getItem('moneda');if(r)cur=r;}catch(e){}
     if(!fijos||fijos.length===0){fijos=SEED.map((s,i)=>({id:Date.now()+i,desc:s.desc,cat:s.cat,monto:0}));saveF();}
-    document.getElementById('curUSD').classList.toggle('on',cur==='$');
-    document.getElementById('curBs').classList.toggle('on',cur==='Bs');
-    document.querySelectorAll('.amount .cur').forEach(e=>e.textContent=cur);
+    reflectCur();
     render();
     updateAvatar();applyGate();
     initAuth();
@@ -362,10 +426,16 @@
   function saveF(){try{localStorage.setItem('fijos',JSON.stringify(fijos));}catch(e){}scheduleSync();}
   function saveG(){try{localStorage.setItem('gastos',JSON.stringify(gastos));}catch(e){}scheduleSync();}
 
+  function reflectCur(){
+    document.getElementById('curUSD').classList.toggle('on',cur==='$');
+    document.getElementById('curBs').classList.toggle('on',cur==='Bs');
+    var u2=document.getElementById('curUSD2'),b2=document.getElementById('curBs2');
+    if(u2)u2.classList.toggle('on',cur==='$');
+    if(b2)b2.classList.toggle('on',cur==='Bs');
+    document.querySelectorAll('.amount .cur').forEach(e=>e.textContent=cur);
+  }
   function setCur(c){cur=c;try{localStorage.setItem('moneda',c);}catch(e){}
-    document.querySelectorAll('.amount .cur').forEach(e=>e.textContent=c);
-    document.getElementById('curUSD').classList.toggle('on',c==='$');
-    document.getElementById('curBs').classList.toggle('on',c==='Bs');scheduleSync();render();}
+    reflectCur();scheduleSync();render();}
 
   function tab(t){
     current=t;
@@ -397,9 +467,7 @@
     if(Array.isArray(d.gastos))gastos=d.gastos;
     if(d.moneda){cur=d.moneda;localStorage.setItem('moneda',cur);}
     saveLocal();
-    document.getElementById('curUSD').classList.toggle('on',cur==='$');
-    document.getElementById('curBs').classList.toggle('on',cur==='Bs');
-    document.querySelectorAll('.amount .cur').forEach(e=>e.textContent=cur);
+    reflectCur();
     render();
   }
 
@@ -407,8 +475,14 @@
     const inn=!!session;
     document.getElementById('authOut').classList.toggle('hide',inn);
     document.getElementById('authIn').classList.toggle('hide',!inn);
-    if(inn)document.getElementById('authWho').textContent=' · '+(session.user.email||'');
-    updateAvatar();applyGate();
+    document.getElementById('profileCard').classList.toggle('hide',!inn);
+    if(inn){
+      const em=session.user.email||'';
+      document.getElementById('authWho').textContent=' · '+em;
+      document.getElementById('profEmail').textContent=em;
+      document.getElementById('profInit').textContent=((em.trim()[0])||'?').toUpperCase();
+    }
+    updateAvatar();applyGate();renderAccount();
   }
   function updateAvatar(){
     const a=document.getElementById('avatar'),el=document.getElementById('avInit');
@@ -545,7 +619,39 @@
   function totalFijos(){return fijos.reduce((s,f)=>s+(+f.monto||0),0);}
   function varMes(k){return gastos.filter(g=>mk(g.fecha)===k).reduce((s,g)=>s+g.monto,0);}
 
-  function render(){renderResumen();renderFijos();renderVariables();}
+  function render(){renderResumen();renderFijos();renderVariables();renderAccount();}
+
+  function renderAccount(){
+    const hoy=new Date().toISOString().slice(0,7);
+    const mov=document.getElementById('stMov'); if(mov)mov.textContent=gastos.length;
+    const f=document.getElementById('stFij'); if(f)f.textContent=fmtS(totalFijos());
+    const m=document.getElementById('stMes'); if(m)m.textContent=fmtS(totalFijos()+varMes(hoy));
+  }
+
+  function exportData(){
+    const blob=new Blob([JSON.stringify({fijos,gastos,moneda:cur,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='lukas-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  }
+  function importData(ev){
+    const file=ev.target.files&&ev.target.files[0]; if(!file)return;
+    const rd=new FileReader();
+    rd.onload=function(){
+      try{const d=JSON.parse(rd.result);
+        if(!d||(!Array.isArray(d.fijos)&&!Array.isArray(d.gastos)))throw new Error('formato');
+        applyData(d);scheduleSync();alert('Datos importados correctamente.');
+      }catch(e){alert('No se pudo leer el archivo (formato inválido).');}
+    };
+    rd.readAsText(file); ev.target.value='';
+  }
+  function clearAll(){
+    if(!confirm('¿Borrar TODOS tus gastos y fijos? Esta acción no se puede deshacer.'))return;
+    gastos=[]; fijos=[];
+    saveLocal(); render(); scheduleSync();
+    alert('Listo, se borraron todos los datos.');
+  }
 
   function renderResumen(){
     const hoy=new Date().toISOString().slice(0,7);
