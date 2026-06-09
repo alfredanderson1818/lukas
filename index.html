@@ -2,37 +2,57 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mis Gastos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Lukas · App de gastos</title>
+<meta name="description" content="Lukas — App de gastos">
+<meta name="theme-color" content="#2563EB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Lukas">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23ffffff'/%3E%3Cg stroke-linecap='butt'%3E%3Cline x1='37' y1='15' x2='37' y2='85' stroke='%230F172A' stroke-width='15'/%3E%3Cline x1='41' y1='57' x2='75' y2='23' stroke='%232563EB' stroke-width='15'/%3E%3Cline x1='44' y1='53' x2='78' y2='85' stroke='%230F172A' stroke-width='15'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,800,900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#f4f4f7;
+    --bg:#f1f5f9;
     --surface:#ffffff;
-    --ink:#1c1c1e;
-    --muted:#8a8a8f;
-    --faint:#b6b6bc;
-    --line:rgba(0,0,0,.055);
-    --seg-track:#e7e7ec;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --faint:#aab4c4;
+    --line:rgba(15,23,42,.07);
+    --seg-track:#e6ebf2;
     --seg-pill:#ffffff;
-    --field:#f2f2f6;
-    --blue:#0a84ff;
-    --ring-empty:#ececf0;
-    --shadow:0 1px 1px rgba(0,0,0,.03), 0 4px 14px rgba(0,0,0,.05), 0 14px 30px rgba(0,0,0,.045);
+    --field:#f1f5f9;
+    --blue:#2563eb;
+    --green:#16a34a;
+    --sand:#f5e9d7;
+    --ring-empty:#e6ebf2;
+    --font-display:"Satoshi",-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;
+    --font-text:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+    --shadow:0 1px 1px rgba(15,23,42,.03), 0 4px 14px rgba(15,23,42,.05), 0 14px 30px rgba(15,23,42,.05);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{background:var(--bg);}
   body::before{content:"";position:fixed;inset:-2px;background:var(--bg);z-index:-1;}
   body{
-    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",sans-serif;
+    font-family:var(--font-text);
     color:var(--ink);-webkit-font-smoothing:antialiased;
     font-feature-settings:"tnum" 1;
     padding:16px 16px 70px;
-    letter-spacing:-.015em;min-height:100vh;
+    letter-spacing:-.011em;min-height:100vh;
   }
+  h1,.amount .val,.hero .lab,.sectitle,.donut .center .v,.hpill .n,.amount .cur{font-family:var(--font-display);}
   .wrap{max-width:560px;margin:0 auto;}
 
   .topbar{display:flex;justify-content:space-between;align-items:center;margin:8px 2px 18px;}
   h1{font-size:28px;font-weight:800;letter-spacing:-.035em;}
+  .brand{display:flex;align-items:center;gap:9px;}
+  .brand .mark{flex-shrink:0;display:block;}
+  .brand .word{font-family:var(--font-display);font-size:27px;font-weight:800;letter-spacing:-.04em;color:var(--ink);line-height:1;}
 
   .seg{display:inline-flex;background:var(--seg-track);border-radius:10px;padding:2px;}
   .seg button{border:none;background:transparent;font-family:inherit;font-size:13px;font-weight:600;
@@ -53,9 +73,9 @@
   .hero{
     position:relative;overflow:hidden;border:1px solid var(--line);border-radius:26px;padding:24px 22px 20px;margin-bottom:16px;
     background:
-      radial-gradient(130% 120% at 100% 0%, rgba(10,132,255,.10) 0%, transparent 45%),
-      radial-gradient(130% 120% at 0% 100%, rgba(191,90,242,.08) 0%, transparent 50%),
-      linear-gradient(160deg,#ffffff 0%,#fafbff 100%);
+      radial-gradient(130% 120% at 100% 0%, rgba(37,99,235,.11) 0%, transparent 45%),
+      radial-gradient(130% 120% at 0% 100%, rgba(22,163,74,.08) 0%, transparent 50%),
+      linear-gradient(160deg,#ffffff 0%,#f7faff 100%);
     box-shadow:var(--shadow);
   }
   .hero .lab{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px;}
@@ -64,10 +84,10 @@
   .amount .val{font-size:52px;font-weight:800;letter-spacing:-.045em;color:var(--ink);}
   .hero .pills{display:flex;gap:10px;margin-top:18px;}
   .hpill{flex:1;border-radius:16px;padding:12px 14px;}
-  .hpill.f{background:rgba(10,132,255,.09);}
-  .hpill.v{background:rgba(48,199,89,.10);}
+  .hpill.f{background:rgba(37,99,235,.09);}
+  .hpill.v{background:rgba(22,163,74,.10);}
   .hpill .t{font-size:11.5px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:5px;}
-  .hpill.f .t{color:#0a84ff;} .hpill.v .t{color:#1f9d4d;}
+  .hpill.f .t{color:#2563eb;} .hpill.v .t{color:#16a34a;}
   .hpill .n{font-size:18px;font-weight:800;letter-spacing:-.02em;color:var(--ink);}
 
   .sectitle{font-size:19px;font-weight:700;letter-spacing:-.02em;margin:2px 2px 16px;}
@@ -86,7 +106,7 @@
 
   .trend{display:flex;align-items:flex-end;gap:9px;height:142px;padding-top:8px;}
   .trend .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end;}
-  .trend .bar{width:100%;max-width:30px;border-radius:9px;background:linear-gradient(180deg,#5ab0ff,#0a84ff);transition:height .6s cubic-bezier(.2,.8,.2,1);min-height:5px;box-shadow:0 4px 12px rgba(10,132,255,.22);}
+  .trend .bar{width:100%;max-width:30px;border-radius:9px;background:linear-gradient(180deg,#5b8def,#2563eb);transition:height .6s cubic-bezier(.2,.8,.2,1);min-height:5px;box-shadow:0 4px 12px rgba(37,99,235,.22);}
   .trend .ml{font-size:11px;color:var(--muted);font-weight:600;}
   .trend .mv{font-size:10px;color:var(--ink);font-weight:700;opacity:.8;height:13px;}
 
@@ -114,12 +134,12 @@
   input,select{width:100%;font-family:inherit;font-size:16px;padding:14px;border:1px solid var(--line);
     border-radius:14px;background:var(--field);color:var(--ink);transition:.15s;}
   input::placeholder{color:var(--faint);}
-  input:focus,select:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(10,132,255,.15);}
+  input:focus,select:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.15);}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
   .mb{margin-bottom:12px;}
   .btn{width:100%;background:var(--blue);color:#fff;border:none;border-radius:15px;padding:16px;
-    font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:.12s;letter-spacing:-.01em;
-    box-shadow:0 6px 16px rgba(10,132,255,.28);}
+    font-family:var(--font-display);font-size:16px;font-weight:700;cursor:pointer;transition:.12s;letter-spacing:-.01em;
+    box-shadow:0 6px 16px rgba(37,99,235,.28);}
   .btn:active{transform:scale(.98);filter:brightness(.95);}
 
   .empty{text-align:center;color:var(--muted);padding:30px 16px;font-size:14px;line-height:1.5;}
@@ -131,7 +151,14 @@
 <div class="wrap">
 
   <div class="topbar">
-    <h1>Mis Gastos</h1>
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 100" width="30" height="30" aria-hidden="true">
+        <line x1="37" y1="15" x2="37" y2="85" stroke="#0F172A" stroke-width="15"/>
+        <line x1="41" y1="57" x2="75" y2="23" stroke="#2563EB" stroke-width="15"/>
+        <line x1="44" y1="53" x2="78" y2="85" stroke="#0F172A" stroke-width="15"/>
+      </svg>
+      <span class="word">Lukas</span>
+    </div>
     <div class="seg">
       <button id="curUSD" class="on" onclick="setCur('$')">$</button>
       <button id="curBs" onclick="setCur('Bs')">Bs</button>
@@ -142,7 +169,7 @@
     <button id="tabResumen" class="on" onclick="tab('resumen')">Resumen</button>
     <button id="tabVar" onclick="tab('variables')">Variables</button>
     <button id="tabFijos" onclick="tab('fijos')">Fijos</button>
-    <button id="tabSync" onclick="tab('sync')">&#9729; Nube</button>
+    <button id="tabSync" onclick="tab('sync')">Cuenta</button>
   </div>
 
   <section id="vResumen">
@@ -225,25 +252,40 @@
   </section>
 
   <section id="vSync" class="hide">
-    <div class="card">
-      <div class="sectitle" style="margin-top:0;">Sincronizaci&oacute;n con GitHub</div>
-      <p class="note" style="margin-left:0;">Tus datos se guardan en un <b>Gist privado</b> de tu cuenta de GitHub, as&iacute; se sincronizan entre tu tel&eacute;fono y tu PC. Necesit&aacute;s un token con permiso <b>gist</b>.</p>
-      <div class="mb"><label>Token de GitHub</label><input id="ghToken" type="password" placeholder="ghp_..." autocomplete="off"></div>
-      <div class="mb"><label>Gist ID (se completa solo la primera vez)</label><input id="ghGist" placeholder="vac&iacute;o = crear uno nuevo" autocomplete="off"></div>
+    <div class="card" id="authOut">
+      <div class="sectitle" style="margin-top:0;">Tu cuenta Lukas</div>
+      <p class="note" style="margin-left:0;">Inici&aacute; sesi&oacute;n para sincronizar tus gastos entre todos tus dispositivos. Tus datos quedan privados, protegidos por tu cuenta.</p>
+      <div class="mb"><label>Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="tu@email.com"></div>
+      <div class="mb"><label>Contrase&ntilde;a</label><input id="authPass" type="password" autocomplete="current-password" placeholder="m&iacute;nimo 6 caracteres"></div>
       <div class="grid2" style="margin-bottom:0;">
-        <button class="btn" style="box-shadow:none;background:#30c759;" onclick="cloudPush()">&#8593; Guardar en la nube</button>
-        <button class="btn" style="box-shadow:none;background:#5e5ce6;" onclick="cloudPull()">&#8595; Cargar de la nube</button>
+        <button class="btn" onclick="signIn()">Iniciar sesi&oacute;n</button>
+        <button class="btn" style="background:#0f172a;box-shadow:none;" onclick="signUp()">Crear cuenta</button>
+      </div>
+      <div class="note" id="authStatus" style="margin:12px 3px 0;"></div>
+    </div>
+
+    <div class="card hide" id="authIn">
+      <div class="sectitle" style="margin-top:0;">Sincronizaci&oacute;n</div>
+      <div class="frow" style="border:none;padding:2px 2px 14px;">
+        <span class="dot" style="background:#2563eb22;color:#2563eb">&#9729;</span>
+        <div class="nm">Conectado<small id="authWho">&nbsp;</small></div>
+        <button class="del" style="width:auto;font-size:13px;font-weight:600;color:#ff3b30;" onclick="signOut()">Salir</button>
+      </div>
+      <div class="grid2" style="margin-bottom:0;">
+        <button class="btn" style="box-shadow:none;background:#16a34a;" onclick="cloudPush()">&#8593; Guardar ahora</button>
+        <button class="btn" style="box-shadow:none;background:#5b8def;" onclick="cloudPull()">&#8595; Cargar ahora</button>
       </div>
       <label style="display:flex;align-items:center;gap:9px;margin:16px 3px 0;font-size:14px;color:var(--ink);cursor:pointer;">
-        <input type="checkbox" id="ghAuto" style="width:auto;" onchange="setAuto()"> Sincronizar autom&aacute;ticamente al guardar
+        <input type="checkbox" id="autoSync" style="width:auto;" onchange="setAuto()"> Sincronizar autom&aacute;ticamente al guardar
       </label>
       <div class="note" id="syncStatus" style="margin:12px 3px 0;">Sin sincronizar todav&iacute;a.</div>
     </div>
-    <p class="note">Para crear el token: en GitHub abr&iacute; <b>Settings &rarr; Developer settings &rarr; Personal access tokens (classic) &rarr; Generate new token</b>, march&aacute; solo el permiso <b>gist</b> y copialo aqu&iacute;.</p>
+    <p class="note">Tus datos se guardan en tu base Supabase con seguridad por fila (RLS): solo vos pod&eacute;s verlos, aunque la p&aacute;gina sea p&uacute;blica.</p>
   </section>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   let fijos=[], gastos=[], cur='$', current='resumen';
 
@@ -256,8 +298,8 @@
     {desc:'Suscripciones',cat:'Otros'},
   ];
 
-  const C={Comida:'#ff9f0a',Transporte:'#30c759',Servicios:'#34bfe0',Oficina:'#0a84ff',
-    'N\u00f3mina':'#af52de',Marketing:'#ff375f',Personal:'#5e5ce6',Otros:'#a0a0a8'};
+  const C={Comida:'#ff9f0a',Transporte:'#16a34a',Servicios:'#34bfe0',Oficina:'#2563eb',
+    'N\u00f3mina':'#af52de',Marketing:'#ff375f',Personal:'#5e5ce6',Otros:'#94a3b8'};
   const ICON={Comida:'\ud83c\udf7d\ufe0f',Transporte:'\ud83d\ude97',Servicios:'\ud83d\udca1',Oficina:'\ud83c\udfe2',
     'N\u00f3mina':'\ud83d\udc65',Marketing:'\ud83d\udce3',Personal:'\ud83d\udecd\ufe0f',Otros:'\u2022'};
 
@@ -277,11 +319,8 @@
     document.getElementById('curUSD').classList.toggle('on',cur==='$');
     document.getElementById('curBs').classList.toggle('on',cur==='Bs');
     document.querySelectorAll('.amount .cur').forEach(e=>e.textContent=cur);
-    try{const t=localStorage.getItem('ghToken');if(t)document.getElementById('ghToken').value=t;}catch(e){}
-    try{const g=localStorage.getItem('ghGist');if(g)document.getElementById('ghGist').value=g;}catch(e){}
-    try{autosync=localStorage.getItem('ghAuto')==='1';document.getElementById('ghAuto').checked=autosync;}catch(e){}
     render();
-    if(autosync&&ghCreds().token&&ghCreds().gist)cloudPull();
+    initAuth();
   }
   function saveF(){try{localStorage.setItem('fijos',JSON.stringify(fijos));}catch(e){}scheduleSync();}
   function saveG(){try{localStorage.setItem('gastos',JSON.stringify(gastos));}catch(e){}scheduleSync();}
@@ -304,15 +343,19 @@
     window.scrollTo({top:0,behavior:'smooth'});
   }
 
-  /* ---- Sincronización con GitHub (Gist) ---- */
-  const GH_API='https://api.github.com/gists', GIST_FILE='gastos.json';
-  let autosync=false, syncTimer=null;
-  function ghHeaders(t){return {'Authorization':'Bearer '+t,'Accept':'application/vnd.github+json','Content-Type':'application/json'};}
-  function ghCreds(){return {token:(document.getElementById('ghToken').value||'').trim(),gist:(document.getElementById('ghGist').value||'').trim()};}
+  /* ---- Sincronización con Supabase ---- */
+  const SUPA_URL='https://gsgfjtyiqyssfuroggqw.supabase.co';
+  const SUPA_KEY='sb_publishable_Z89zZ4wM-6DJJQsI3mZM9A_lkpDVPSJ';
+  const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPA_URL,SUPA_KEY):null;
+  let autosync=false, syncTimer=null, session=null;
+
   function syncStatus(m){const e=document.getElementById('syncStatus');if(e)e.textContent=m;}
-  function snapshot(){return JSON.stringify({fijos,gastos,moneda:cur,updatedAt:new Date().toISOString()},null,2);}
+  function authStatus(m){const e=document.getElementById('authStatus');if(e)e.textContent=m;}
+  function snapshot(){return {fijos,gastos,moneda:cur,updatedAt:new Date().toISOString()};}
+  function saveLocal(){try{localStorage.setItem('fijos',JSON.stringify(fijos));localStorage.setItem('gastos',JSON.stringify(gastos));}catch(e){}}
 
   function applyData(d){
+    if(!d)return;
     if(Array.isArray(d.fijos))fijos=d.fijos;
     if(Array.isArray(d.gastos))gastos=d.gastos;
     if(d.moneda){cur=d.moneda;localStorage.setItem('moneda',cur);}
@@ -322,51 +365,105 @@
     document.querySelectorAll('.amount .cur').forEach(e=>e.textContent=cur);
     render();
   }
-  function saveLocal(){try{localStorage.setItem('fijos',JSON.stringify(fijos));localStorage.setItem('gastos',JSON.stringify(gastos));}catch(e){}}
+
+  function reflectAuth(){
+    const inn=!!session;
+    document.getElementById('authOut').classList.toggle('hide',inn);
+    document.getElementById('authIn').classList.toggle('hide',!inn);
+    if(inn)document.getElementById('authWho').textContent=' · '+(session.user.email||'');
+  }
+
+  async function signUp(){
+    if(!sb){authStatus('No se pudo cargar Supabase (revisá tu conexión).');return;}
+    const email=document.getElementById('authEmail').value.trim();
+    const password=document.getElementById('authPass').value;
+    if(!email||password.length<6){authStatus('Ingresá un email y una contraseña de al menos 6 caracteres.');return;}
+    authStatus('Creando cuenta…');
+    const {data,error}=await sb.auth.signUp({email,password});
+    if(error){authStatus('Error: '+error.message);return;}
+    if(data.session){authStatus('');session=data.session;await afterLogin();}
+    else authStatus('Cuenta creada. Revisá tu email para confirmarla y luego iniciá sesión.');
+  }
+
+  async function signIn(){
+    if(!sb){authStatus('No se pudo cargar Supabase (revisá tu conexión).');return;}
+    const email=document.getElementById('authEmail').value.trim();
+    const password=document.getElementById('authPass').value;
+    if(!email||!password){authStatus('Ingresá tu email y contraseña.');return;}
+    authStatus('Entrando…');
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error){authStatus('Error: '+error.message);return;}
+    authStatus('');session=data.session;await afterLogin();
+  }
+
+  async function signOut(){
+    if(sb)await sb.auth.signOut();
+    session=null;autosync=false;
+    const c=document.getElementById('autoSync');if(c)c.checked=false;
+    localStorage.setItem('autoSync','0');
+    reflectAuth();
+  }
+
+  async function afterLogin(){
+    reflectAuth();
+    document.getElementById('authPass').value='';
+    const remote=await fetchRemote();
+    if(remote)applyData(remote);
+    else await cloudPush();
+    autosync=localStorage.getItem('autoSync')!=='0';
+    document.getElementById('autoSync').checked=autosync;
+    localStorage.setItem('autoSync',autosync?'1':'0');
+  }
+
+  async function fetchRemote(){
+    if(!sb||!session)return null;
+    const {data,error}=await sb.from('gastos_data').select('data').eq('user_id',session.user.id).maybeSingle();
+    if(error){syncStatus('Error al leer: '+error.message);return null;}
+    return data?data.data:null;
+  }
 
   async function cloudPush(){
-    const {token,gist}=ghCreds();
-    if(!token){syncStatus('Falta el token de GitHub.');return;}
-    localStorage.setItem('ghToken',token);
-    const body={description:'Mis Gastos (datos)',public:false,files:{[GIST_FILE]:{content:snapshot()}}};
+    if(!session){authStatus('Iniciá sesión primero.');return;}
     try{
       syncStatus('Guardando…');
-      const url=gist?GH_API+'/'+gist:GH_API;
-      const res=await fetch(url,{method:gist?'PATCH':'POST',headers:ghHeaders(token),body:JSON.stringify(body)});
-      if(!res.ok)throw new Error('HTTP '+res.status);
-      const j=await res.json();
-      document.getElementById('ghGist').value=j.id;
-      localStorage.setItem('ghGist',j.id);
+      const {error}=await sb.from('gastos_data').upsert({user_id:session.user.id,data:snapshot(),updated_at:new Date().toISOString()});
+      if(error)throw error;
       syncStatus('Guardado en la nube ✓  '+new Date().toLocaleString('es-VE'));
     }catch(e){syncStatus('Error al guardar: '+e.message);}
   }
 
   async function cloudPull(){
-    const {token,gist}=ghCreds();
-    if(!token||!gist){syncStatus('Falta token o Gist ID.');return;}
-    try{
-      syncStatus('Cargando…');
-      const res=await fetch(GH_API+'/'+gist,{headers:ghHeaders(token)});
-      if(!res.ok)throw new Error('HTTP '+res.status);
-      const j=await res.json();
-      const c=j.files&&j.files[GIST_FILE]&&j.files[GIST_FILE].content;
-      if(!c)throw new Error('El Gist no tiene datos');
-      applyData(JSON.parse(c));
-      localStorage.setItem('ghToken',token);localStorage.setItem('ghGist',gist);
-      syncStatus('Cargado de la nube ✓  '+new Date().toLocaleString('es-VE'));
-    }catch(e){syncStatus('Error al cargar: '+e.message);}
+    if(!session){authStatus('Iniciá sesión primero.');return;}
+    syncStatus('Cargando…');
+    const remote=await fetchRemote();
+    if(remote){applyData(remote);syncStatus('Cargado de la nube ✓  '+new Date().toLocaleString('es-VE'));}
+    else syncStatus('Todavía no hay datos en la nube.');
   }
 
   function setAuto(){
-    autosync=document.getElementById('ghAuto').checked;
-    localStorage.setItem('ghAuto',autosync?'1':'0');
-    if(autosync){localStorage.setItem('ghToken',ghCreds().token);scheduleSync();}
+    autosync=document.getElementById('autoSync').checked;
+    localStorage.setItem('autoSync',autosync?'1':'0');
+    if(autosync)scheduleSync();
   }
   function scheduleSync(){
-    if(!autosync)return;
-    if(!ghCreds().token)return;
+    if(!autosync||!session)return;
     clearTimeout(syncTimer);
     syncTimer=setTimeout(cloudPush,1500);
+  }
+
+  async function initAuth(){
+    if(!sb){authStatus('No se pudo cargar Supabase (revisá tu conexión).');return;}
+    try{
+      const {data}=await sb.auth.getSession();
+      session=data.session||null;
+    }catch(e){session=null;}
+    reflectAuth();
+    if(session){
+      autosync=localStorage.getItem('autoSync')!=='0';
+      document.getElementById('autoSync').checked=autosync;
+      await cloudPull();
+    }
+    sb.auth.onAuthStateChange((_e,s)=>{session=s;reflectAuth();});
   }
 
   function addFijo(){
