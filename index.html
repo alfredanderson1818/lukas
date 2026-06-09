@@ -314,7 +314,7 @@
       <div class="grid2">
         <div><label>Monto</label><input id="monto" type="number" step="0.01" min="0" placeholder="0.00" oninput="updateMontoHint()">
           <div class="inlinecur">
-            <div class="seg seg-sm"><button id="gUsd" class="on" onclick="setGCur('$')">$</button><button id="gBs" onclick="setGCur('Bs')">Bs</button></div>
+            <div class="seg seg-sm"><button id="gUsd" class="on" onclick="setGCur('$')">$</button><button id="gBs" onclick="setGCur('Bs')">Bs</button><button id="gEur" onclick="setGCur('&euro;')">&euro;</button></div>
             <span class="hint" id="montoHint"></span>
           </div>
         </div>
@@ -367,7 +367,7 @@
           </select>
         </div>
         <div><label>Monto</label><input id="fMonto" type="number" step="0.01" min="0" placeholder="0.00">
-          <div class="seg seg-sm" style="margin-top:8px;"><button id="fUsd" class="on" onclick="setFCur('$')">$</button><button id="fBs" onclick="setFCur('Bs')">Bs</button></div>
+          <div class="seg seg-sm" style="margin-top:8px;"><button id="fUsd" class="on" onclick="setFCur('$')">$</button><button id="fBs" onclick="setFCur('Bs')">Bs</button><button id="fEur" onclick="setFCur('&euro;')">&euro;</button></div>
         </div>
       </div>
       <button class="btn" onclick="addFijo()">Agregar fijo</button>
@@ -487,12 +487,23 @@
   function setRateSource(s){rates.source=s;saveRates();applyRate();renderRates();render();}
   function setCustomRate(v){rates.custom=parseFloat(v)||0;rates.source='custom';saveRates();applyRate();renderRates();render();}
 
-  function disp(usd){return cur==='$'?(+usd||0):(+usd||0)*activeRate;}
   function num(n){return Number(n).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});}
   function numBs(n){return Math.round(+n||0).toLocaleString('es-VE');}
-  function fmt(n){return cur+' '+num(disp(n));}
-  function fmtS(n){const v=disp(n);return cur+(v>=1000?' '+numBs(v):' '+num(v));}
-  function fmtOther(usd){return cur==='$'?(activeRate?('Bs '+numBs(usd*activeRate)):''):('$ '+num(usd));}
+  function eurUsd(){return (rates.eurBcv&&rates.usdBcv)?rates.eurBcv/rates.usdBcv:null;}
+  // moneda mostrada: v ya está en la moneda activa
+  function money(v){return cur+(Math.abs(v)>=1000?' '+numBs(v):' '+num(v));}
+  function disp(usd){return cur==='$'?(+usd||0):(+usd||0)*activeRate;} // agregado con tasa actual
+  function fmtS(n){return money(disp(n));}
+  // por ítem: cada gasto recuerda su tasa (x.rate = Bs/$ del día) -> el histórico no cambia
+  function rOf(x){return (x&&+x.rate)?+x.rate:activeRate;}
+  function bsOf(x){return (+x.monto||0)*rOf(x);}
+  function dispOf(x){return cur==='$'?(+x.monto||0):bsOf(x);}
+  function fmtItem(x){return money(dispOf(x));}
+  function fmtItemOther(x){return cur==='$'?(rOf(x)?'Bs '+numBs(bsOf(x)):''):'$ '+num(+x.monto||0);}
+  function dispSum(arr){return arr.reduce((s,x)=>s+dispOf(x),0);}
+  function sumUsd(arr){return arr.reduce((s,x)=>s+(+x.monto||0),0);}
+  function sumBs(arr){return arr.reduce((s,x)=>s+bsOf(x),0);}
+  function monthG(k){return gastos.filter(g=>mk(g.fecha)===k);}
   function mk(f){return f.slice(0,7);}
   function mesCorto(k){const m=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];return m[parseInt(k.split('-')[1])-1];}
   function mesLargo(k){const m=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];const y=k.split('-')[0],mm=k.split('-')[1];return m[parseInt(mm)-1]+' '+y;}
@@ -511,14 +522,29 @@
     initAuth();
     fetchRates();
   }
-  function setGCur(c){gCurIn=c;document.getElementById('gUsd').classList.toggle('on',c==='$');document.getElementById('gBs').classList.toggle('on',c==='Bs');updateMontoHint();}
-  function setFCur(c){fCurIn=c;document.getElementById('fUsd').classList.toggle('on',c==='$');document.getElementById('fBs').classList.toggle('on',c==='Bs');}
+  function inToUsd(raw,c){
+    if(c==='$')return raw;
+    if(c==='Bs')return activeRate?raw/activeRate:NaN;
+    if(c==='€'){const e=eurUsd();return e?raw*e:NaN;}
+    return raw;
+  }
+  function setGCur(c){gCurIn=c;
+    document.getElementById('gUsd').classList.toggle('on',c==='$');
+    document.getElementById('gBs').classList.toggle('on',c==='Bs');
+    document.getElementById('gEur').classList.toggle('on',c==='€');
+    updateMontoHint();}
+  function setFCur(c){fCurIn=c;
+    document.getElementById('fUsd').classList.toggle('on',c==='$');
+    document.getElementById('fBs').classList.toggle('on',c==='Bs');
+    document.getElementById('fEur').classList.toggle('on',c==='€');}
   function updateMontoHint(){
     const raw=parseFloat(document.getElementById('monto').value);const h=document.getElementById('montoHint');
     if(!h)return;
     if(isNaN(raw)){h.textContent='';return;}
-    if(gCurIn==='Bs')h.textContent=activeRate?('= $ '+num(raw/activeRate)):'cargando tasa…';
-    else h.textContent=activeRate?('= Bs '+numBs(raw*activeRate)):'';
+    const usd=inToUsd(raw,gCurIn);
+    if(isNaN(usd)){h.textContent='cargando tasa…';return;}
+    if(gCurIn==='$')h.textContent=activeRate?('= Bs '+numBs(raw*activeRate)):'';
+    else h.textContent='= $ '+num(usd)+(activeRate?(' · Bs '+numBs(usd*activeRate)):'');
   }
   function saveF(){try{localStorage.setItem('fijos',JSON.stringify(fijos));}catch(e){}scheduleSync();}
   function saveG(){try{localStorage.setItem('gastos',JSON.stringify(gastos));}catch(e){}scheduleSync();}
@@ -696,23 +722,23 @@
     const d=document.getElementById('fDesc').value.trim();
     const raw=parseFloat(document.getElementById('fMonto').value)||0;
     if(!d)return;
-    if(fCurIn==='Bs'&&!activeRate){alert('Esperá unos segundos a que carguen las tasas de cambio.');return;}
-    const usd=fCurIn==='$'?raw:(activeRate?raw/activeRate:0);
-    fijos.push({id:Date.now(),desc:d,cat:document.getElementById('fCat').value,monto:usd,in:{cur:fCurIn,amount:raw}});
+    const usd=inToUsd(raw,fCurIn);
+    if(isNaN(usd)){alert('Esperá unos segundos a que carguen las tasas de cambio.');return;}
+    fijos.push({id:Date.now(),desc:d,cat:document.getElementById('fCat').value,monto:usd,rate:activeRate,in:{cur:fCurIn,amount:raw}});
     document.getElementById('fDesc').value='';document.getElementById('fMonto').value='';
     saveF();render();
   }
-  function setFijo(id,v){const f=fijos.find(x=>x.id===id);if(f){const val=parseFloat(v)||0;f.monto=cur==='$'?val:(activeRate?val/activeRate:f.monto);saveF();renderResumen();renderFijos();renderAccount();}}
+  function setFijo(id,v){const f=fijos.find(x=>x.id===id);if(f){const val=parseFloat(v)||0;f.monto=cur==='$'?val:(rOf(f)?val/rOf(f):f.monto);saveF();renderResumen();renderFijos();renderAccount();}}
   function delFijo(id){fijos=fijos.filter(x=>x.id!==id);saveF();render();}
 
   function addGasto(){
     const d=document.getElementById('desc').value.trim();
     const raw=parseFloat(document.getElementById('monto').value);
     if(!d||isNaN(raw))return;
-    if(gCurIn==='Bs'&&!activeRate){alert('Esperá unos segundos a que carguen las tasas de cambio.');return;}
-    const usd=gCurIn==='$'?raw:raw/activeRate;
+    const usd=inToUsd(raw,gCurIn);
+    if(isNaN(usd)){alert('Esperá unos segundos a que carguen las tasas de cambio.');return;}
     gastos.push({id:Date.now(),desc:d,monto:usd,cat:document.getElementById('cat').value,fecha:document.getElementById('fecha').value,
-      in:{cur:gCurIn,amount:raw,rate:gCurIn==='Bs'?activeRate:null,src:rates.source}});
+      rate:activeRate,in:{cur:gCurIn,amount:raw,src:rates.source}});
     document.getElementById('desc').value='';document.getElementById('monto').value='';updateMontoHint();
     saveG();render();
   }
@@ -726,8 +752,8 @@
   function renderAccount(){
     const hoy=new Date().toISOString().slice(0,7);
     const mov=document.getElementById('stMov'); if(mov)mov.textContent=gastos.length;
-    const f=document.getElementById('stFij'); if(f)f.textContent=fmtS(totalFijos());
-    const m=document.getElementById('stMes'); if(m)m.textContent=fmtS(totalFijos()+varMes(hoy));
+    const f=document.getElementById('stFij'); if(f)f.textContent=money(dispSum(fijos));
+    const m=document.getElementById('stMes'); if(m)m.textContent=money(dispSum(fijos)+dispSum(monthG(hoy)));
   }
 
   function exportData(){
@@ -770,41 +796,43 @@
   }
   function renderKpis(){
     const hoy=new Date().toISOString().slice(0,7), d=new Date();
-    const monthG=gastos.filter(g=>mk(g.fecha)===hoy);
-    const tv=monthG.reduce((s,g)=>s+(+g.monto||0),0), tf=totalFijos(), total=tf+tv;
-    const prom=d.getDate()?tv/d.getDate():0;
-    const mayor=monthG.reduce((m,g)=>Math.max(m,+g.monto||0),0);
+    const mg=monthG(hoy);
+    const varD=dispSum(mg), promD=d.getDate()?varD/d.getDate():0;
+    const mayorD=mg.reduce((m,g)=>Math.max(m,dispOf(g)),0);
     const prevKey=new Date(d.getFullYear(),d.getMonth()-1,1).toISOString().slice(0,7);
-    const prevVar=varMes(prevKey);
-    const delta=prevVar>0?((tv-prevVar)/prevVar*100):(tv>0?100:0);
-    const cat={};fijos.forEach(f=>{if(+f.monto>0)cat[f.cat]=(cat[f.cat]||0)+ +f.monto;});monthG.forEach(g=>cat[g.cat]=(cat[g.cat]||0)+ +g.monto);
+    const prevU=sumUsd(monthG(prevKey)), curU=sumUsd(mg);
+    const delta=prevU>0?((curU-prevU)/prevU*100):(curU>0?100:0);
+    const cat={};fijos.forEach(f=>{if(+f.monto>0)cat[f.cat]=(cat[f.cat]||0)+dispOf(f);});mg.forEach(g=>cat[g.cat]=(cat[g.cat]||0)+dispOf(g));
     const top=Object.entries(cat).sort((a,b)=>b[1]-a[1])[0];
+    const totBs=sumBs(fijos)+sumBs(mg);
     const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-    set('kMov',monthG.length);
-    set('kProm',fmtS(prom));
-    set('kMayor',fmtS(mayor));
+    set('kMov',mg.length);
+    set('kProm',money(promD));
+    set('kMayor',money(mayorD));
     const kd=document.getElementById('kDelta');
     if(kd){kd.textContent=(delta>=0?'+':'')+Math.round(delta)+'%';kd.style.color=delta>0?'#ff3b30':(delta<0?'#16a34a':'var(--ink)');}
     set('kTop',top?((ICON[top[0]]||'')+' '+top[0]):'—');
-    set('kBs',activeRate?('Bs '+numBs(total*activeRate)):'—');
+    set('kBs',totBs?('Bs '+numBs(totBs)):'—');
   }
 
   function renderResumen(){
     const hoy=new Date().toISOString().slice(0,7);
-    const tf=totalFijos(), tv=varMes(hoy);
-    document.getElementById('heroVal').textContent=num(disp(tf+tv));
-    document.getElementById('heroAlt').textContent=fmtOther(tf+tv);
-    document.getElementById('sFijos').textContent=fmtS(tf);
-    document.getElementById('sVar').textContent=fmtS(tv);
+    const mg=monthG(hoy);
+    const fijosD=dispSum(fijos), varD=dispSum(mg), totD=fijosD+varD;
+    document.getElementById('heroVal').textContent=num(totD);
+    const otBs=sumBs(fijos)+sumBs(mg), otUsd=sumUsd(fijos)+sumUsd(mg);
+    document.getElementById('heroAlt').textContent= cur==='$' ? (otBs?'Bs '+numBs(otBs):'') : ('$ '+num(otUsd));
+    document.getElementById('sFijos').textContent=money(fijosD);
+    document.getElementById('sVar').textContent=money(varD);
     renderRates();renderKpis();
 
     const cat={};
-    fijos.forEach(f=>{if(+f.monto>0)cat[f.cat]=(cat[f.cat]||0)+(+f.monto);});
-    gastos.filter(g=>mk(g.fecha)===hoy).forEach(g=>cat[g.cat]=(cat[g.cat]||0)+g.monto);
+    fijos.forEach(f=>{if(+f.monto>0)cat[f.cat]=(cat[f.cat]||0)+dispOf(f);});
+    mg.forEach(g=>cat[g.cat]=(cat[g.cat]||0)+dispOf(g));
     const entries=Object.entries(cat).sort((a,b)=>b[1]-a[1]);
     const tot=entries.reduce((s,e)=>s+e[1],0);
 
-    document.getElementById('donutTotal').textContent=fmtS(tot);
+    document.getElementById('donutTotal').textContent=money(tot);
     const svg=document.getElementById('donutSvg');
     const cx=85,cy=85,r=66,sw=17,circ=2*Math.PI*r;
     let off=0,paths='';
@@ -821,32 +849,32 @@
 
     const lg=document.getElementById('legend');
     lg.innerHTML=entries.length?entries.map(([c,v])=>
-      '<div class="item"><span class="swatch" style="background:'+(C[c]||'#a0a0a8')+'"></span><span class="nm">'+c+'</span><span class="am">'+fmtS(v)+'</span></div>'
+      '<div class="item"><span class="swatch" style="background:'+(C[c]||'#a0a0a8')+'"></span><span class="nm">'+c+'</span><span class="am">'+money(v)+'</span></div>'
     ).join(''):'<div class="empty" style="padding:6px 0;">A&uacute;n no hay gastos este mes.<br>Agr&eacute;galos en Variables o Fijos.</div>';
 
     const months=[];const d=new Date();
     for(let i=5;i>=0;i--){const dd=new Date(d.getFullYear(),d.getMonth()-i,1);months.push(dd.toISOString().slice(0,7));}
-    const vals=months.map(k=>varMes(k)+tf);
+    const vals=months.map(k=>dispSum(monthG(k))+fijosD);
     const max=Math.max.apply(null,vals.concat([1]));
     const tr=document.getElementById('trend');
     tr.innerHTML=months.map((k,i)=>{
       const h=Math.max(vals[i]/max*100,4);
       const isNow=k===hoy;
-      return '<div class="col"><div class="mv">'+(vals[i]>0?fmtS(vals[i]).replace(cur+' ',''):'')+'</div>'+
+      return '<div class="col"><div class="mv">'+(vals[i]>0?money(vals[i]).replace(cur+' ',''):'')+'</div>'+
         '<div class="bar" style="height:'+h+'%;'+(isNow?'':'opacity:.38;')+'"></div>'+
         '<div class="ml">'+mesCorto(k)+'</div></div>';
     }).join('');
   }
 
   function renderFijos(){
-    document.getElementById('fijosVal').textContent=num(disp(totalFijos()));
+    document.getElementById('fijosVal').textContent=num(dispSum(fijos));
     const box=document.getElementById('fijosCard');
     box.innerHTML=fijos.length?fijos.map(f=>{
       const col=C[f.cat]||'#a0a0a8';
       return '<div class="frow">'+
         '<span class="dot" style="background:'+col+'22;color:'+col+'">'+(ICON[f.cat]||'\u2022')+'</span>'+
         '<div class="nm">'+esc(f.desc)+'<small>'+f.cat+'</small></div>'+
-        '<input class="minput" type="number" step="0.01" min="0" value="'+(f.monto?(cur==="$"?Math.round(f.monto*100)/100:Math.round(disp(f.monto))):"")+'" placeholder="0.00" onchange="setFijo('+f.id+',this.value)">'+
+        '<input class="minput" type="number" step="0.01" min="0" value="'+(f.monto?(cur==="$"?Math.round(f.monto*100)/100:Math.round(dispOf(f))):"")+'" placeholder="0.00" onchange="setFijo('+f.id+',this.value)">'+
         '<button class="del" onclick="delFijo('+f.id+')">\u00d7</button>'+
       '</div>';
     }).join(''):'<div class="empty">No hay gastos fijos. Agrega uno abajo.</div>';
@@ -865,7 +893,7 @@
       return '<div class="row">'+
         '<span class="dot" style="background:'+col+'22;color:'+col+'">'+(ICON[g.cat]||'\u2022')+'</span>'+
         '<div class="meta"><div class="desc">'+esc(g.desc)+'</div><div class="tags">'+g.cat+' \u00b7 '+fe+'</div></div>'+
-        '<div class="amtwrap"><div class="amt" style="color:'+col+'">'+fmt(g.monto)+'</div><div class="amtsub">'+fmtOther(g.monto)+'</div></div>'+
+        '<div class="amtwrap"><div class="amt" style="color:'+col+'">'+fmtItem(g)+'</div><div class="amtsub">'+fmtItemOther(g)+'</div></div>'+
         '<button class="del" onclick="delGasto('+g.id+')">\u00d7</button>'+
       '</div>';
     }).join(''):'<div class="empty">A\u00fan no hay gastos variables.</div>';
