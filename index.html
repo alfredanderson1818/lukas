@@ -190,6 +190,25 @@
   .stat{flex:1;background:var(--field);border-radius:14px;padding:13px 8px;text-align:center;min-width:0;}
   .stat .v{font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--ink);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .stat .t{font-size:11px;color:var(--muted);font-weight:600;margin-top:3px;}
+  /* Hero equivalente + tasas + KPIs */
+  .heroalt{font-size:13.5px;color:var(--muted);font-weight:600;margin-top:7px;letter-spacing:-.01em;}
+  .mini{background:var(--field);border:none;color:var(--blue);font-family:inherit;font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:9px;cursor:pointer;}
+  .mini:active{filter:brightness(.95);}
+  .rates3{display:flex;gap:9px;}
+  .rtile{flex:1;background:var(--field);border-radius:14px;padding:11px 6px;text-align:center;border:1.5px solid transparent;min-width:0;}
+  .rtile.act{border-color:var(--blue);background:rgba(37,99,235,.07);}
+  .rtile .rt{font-size:10.5px;color:var(--muted);font-weight:600;white-space:nowrap;}
+  .rtile .rv{font-family:var(--font-display);font-weight:800;font-size:14.5px;margin-top:4px;letter-spacing:-.02em;white-space:nowrap;}
+  .kpis{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+  .kpi{background:var(--field);border-radius:14px;padding:13px 6px;text-align:center;min-width:0;}
+  .kpi .kl{font-size:10.5px;color:var(--muted);font-weight:600;}
+  .kpi .kv{font-family:var(--font-display);font-weight:800;font-size:17px;color:var(--ink);margin-top:5px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .seg-sm{display:inline-flex;}
+  .seg-sm button{padding:6px 13px;font-size:13px;}
+  .inlinecur{display:flex;align-items:center;gap:10px;margin-top:9px;flex-wrap:wrap;}
+  .inlinecur .hint{font-size:13px;color:var(--blue);font-weight:700;}
+  .amtwrap{text-align:right;white-space:nowrap;}
+  .amtsub{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:1px;}
 </style>
 </head>
 <body>
@@ -232,13 +251,46 @@
           <button id="curBs" onclick="setCur('Bs')">Bs</button>
         </div>
       </div>
+      <div class="heroalt" id="heroAlt"></div>
       <div class="pills">
         <div class="hpill f"><div class="t">&#8635; Fijos</div><div class="n" id="sFijos">$0</div></div>
         <div class="hpill v"><div class="t">&#65291; Variables (mes)</div><div class="n" id="sVar">$0</div></div>
       </div>
     </div>
 
+    <div class="card anim" style="animation-delay:.06s">
+      <div class="sectitle" style="margin-top:0;display:flex;justify-content:space-between;align-items:center;">
+        <span>Tasa de cambio</span>
+        <button class="mini" onclick="fetchRates()">&#8635; Actualizar</button>
+      </div>
+      <div class="rates3">
+        <div class="rtile act" id="tileBcv"><div class="rt">BCV &middot; USD</div><div class="rv" id="rUsdBcv">&mdash;</div></div>
+        <div class="rtile" id="tileBin"><div class="rt">Binance P2P</div><div class="rv" id="rUsdBin">&mdash;</div></div>
+        <div class="rtile" id="tileEur"><div class="rt">Euro BCV</div><div class="rv" id="rEurBcv">&mdash;</div></div>
+      </div>
+      <label style="margin-top:15px;">Tasa para convertir Bs &harr; $</label>
+      <div class="seg" style="display:flex;">
+        <button id="src_bcv" class="on" onclick="setRateSource('bcv')" style="flex:1;">BCV</button>
+        <button id="src_binance" onclick="setRateSource('binance')" style="flex:1;">Binance</button>
+        <button id="src_custom" onclick="document.getElementById('customRate').focus()" style="flex:1;">Personalizada</button>
+      </div>
+      <input id="customRate" type="number" step="0.01" min="0" placeholder="Tasa personalizada (Bs por $)" oninput="setCustomRate(this.value)" style="margin-top:10px;">
+      <div class="note" id="ratesUpd" style="margin:10px 3px 0;">Tocá Actualizar para traer las tasas</div>
+    </div>
+
     <div class="card anim" style="animation-delay:.10s">
+      <div class="sectitle" style="margin-top:0;">Resumen del mes</div>
+      <div class="kpis">
+        <div class="kpi"><div class="kl">Movimientos</div><div class="kv" id="kMov">0</div></div>
+        <div class="kpi"><div class="kl">Promedio/d&iacute;a</div><div class="kv" id="kProm">$0</div></div>
+        <div class="kpi"><div class="kl">Mayor gasto</div><div class="kv" id="kMayor">$0</div></div>
+        <div class="kpi"><div class="kl">vs mes anterior</div><div class="kv" id="kDelta">0%</div></div>
+        <div class="kpi"><div class="kl">Categor&iacute;a top</div><div class="kv" id="kTop" style="font-size:13.5px;">&mdash;</div></div>
+        <div class="kpi"><div class="kl">Total en Bs</div><div class="kv" id="kBs" style="font-size:14px;">&mdash;</div></div>
+      </div>
+    </div>
+
+    <div class="card anim" style="animation-delay:.14s">
       <div class="sectitle" style="margin-top:0;">Por categor&iacute;a</div>
       <div class="donutwrap">
         <div class="donut">
@@ -260,7 +312,12 @@
       <div class="sectitle" style="margin-top:0;">Nuevo gasto</div>
       <div class="mb"><label>Descripci&oacute;n</label><input id="desc" placeholder="Ej. Gasolina, almuerzo, repuesto..."></div>
       <div class="grid2">
-        <div><label>Monto</label><input id="monto" type="number" step="0.01" min="0" placeholder="0.00"></div>
+        <div><label>Monto</label><input id="monto" type="number" step="0.01" min="0" placeholder="0.00" oninput="updateMontoHint()">
+          <div class="inlinecur">
+            <div class="seg seg-sm"><button id="gUsd" class="on" onclick="setGCur('$')">$</button><button id="gBs" onclick="setGCur('Bs')">Bs</button></div>
+            <span class="hint" id="montoHint"></span>
+          </div>
+        </div>
         <div><label>Categor&iacute;a</label>
           <select id="cat">
             <option>Comida</option><option>Transporte</option><option>Servicios</option>
@@ -309,7 +366,9 @@
             <option>Compras</option><option>Otros</option>
           </select>
         </div>
-        <div><label>Monto</label><input id="fMonto" type="number" step="0.01" min="0" placeholder="0.00"></div>
+        <div><label>Monto</label><input id="fMonto" type="number" step="0.01" min="0" placeholder="0.00">
+          <div class="seg seg-sm" style="margin-top:8px;"><button id="fUsd" class="on" onclick="setFCur('$')">$</button><button id="fBs" onclick="setFCur('Bs')">Bs</button></div>
+        </div>
       </div>
       <button class="btn" onclick="addFijo()">Agregar fijo</button>
     </div>
@@ -405,9 +464,35 @@
     Seguros:'\ud83d\udee1\ufe0f',Impuestos:'\ud83e\uddfe',Bancos:'\ud83c\udfe6',Ahorro:'\ud83d\udc37',
     Oficina:'\ud83c\udfe2','N\u00f3mina':'\ud83d\udc65',Marketing:'\ud83d\udce3',Otros:'\u2022'};
 
+  /* ---- Tasas de cambio (Bs por unidad) — montos guardados en USD ---- */
+  let rates={usdBcv:null,usdBin:null,eurBcv:null,updated:null,source:'bcv',custom:null};
+  let activeRate=0, gCurIn='$', fCurIn='$';
+  function loadRates(){try{const r=localStorage.getItem('rates');if(r)rates=Object.assign(rates,JSON.parse(r));}catch(e){}applyRate();}
+  function saveRates(){try{localStorage.setItem('rates',JSON.stringify(rates));}catch(e){}}
+  function applyRate(){activeRate=rates.source==='custom'?(+rates.custom||0):rates.source==='binance'?(+rates.usdBin||0):(+rates.usdBcv||0);}
+  async function fetchRates(){
+    const u=document.getElementById('ratesUpd'); if(u)u.textContent='Actualizando tasas…';
+    try{
+      const [du,de]=await Promise.all([
+        fetch('https://ve.dolarapi.com/v1/dolares').then(r=>r.json()),
+        fetch('https://ve.dolarapi.com/v1/euros').then(r=>r.json())
+      ]);
+      const pick=(a,f)=>{const x=Array.isArray(a)&&a.find(o=>o.fuente===f);return x&&x.promedio?+x.promedio:null;};
+      const ub=pick(du,'oficial'),up=pick(du,'paralelo'),eb=pick(de,'oficial');
+      if(ub)rates.usdBcv=ub; if(up)rates.usdBin=up; if(eb)rates.eurBcv=eb;
+      rates.updated=new Date().toISOString();
+      saveRates();applyRate();renderRates();render();
+    }catch(e){const u2=document.getElementById('ratesUpd');if(u2)u2.textContent='No se pudieron actualizar (usando últimas guardadas)';renderRates();}
+  }
+  function setRateSource(s){rates.source=s;saveRates();applyRate();renderRates();render();}
+  function setCustomRate(v){rates.custom=parseFloat(v)||0;rates.source='custom';saveRates();applyRate();renderRates();render();}
+
+  function disp(usd){return cur==='$'?(+usd||0):(+usd||0)*activeRate;}
   function num(n){return Number(n).toLocaleString('es-VE',{minimumFractionDigits:2,maximumFractionDigits:2});}
-  function fmt(n){return cur+' '+num(n);}
-  function fmtS(n){return cur+(Number(n)>=1000?' '+Math.round(n).toLocaleString('es-VE'):' '+num(n));}
+  function numBs(n){return Math.round(+n||0).toLocaleString('es-VE');}
+  function fmt(n){return cur+' '+num(disp(n));}
+  function fmtS(n){const v=disp(n);return cur+(v>=1000?' '+numBs(v):' '+num(v));}
+  function fmtOther(usd){return cur==='$'?(activeRate?('Bs '+numBs(usd*activeRate)):''):('$ '+num(usd));}
   function mk(f){return f.slice(0,7);}
   function mesCorto(k){const m=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];return m[parseInt(k.split('-')[1])-1];}
   function mesLargo(k){const m=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];const y=k.split('-')[0],mm=k.split('-')[1];return m[parseInt(mm)-1]+' '+y;}
@@ -417,11 +502,23 @@
     try{const r=localStorage.getItem('fijos');if(r)fijos=JSON.parse(r);}catch(e){}
     try{const r=localStorage.getItem('gastos');if(r)gastos=JSON.parse(r);}catch(e){}
     try{const r=localStorage.getItem('moneda');if(r)cur=r;}catch(e){}
+    loadRates();
     if(!fijos||fijos.length===0){fijos=SEED.map((s,i)=>({id:Date.now()+i,desc:s.desc,cat:s.cat,monto:0}));saveF();}
     reflectCur();
     render();
+    renderRates();
     updateAvatar();applyGate();
     initAuth();
+    fetchRates();
+  }
+  function setGCur(c){gCurIn=c;document.getElementById('gUsd').classList.toggle('on',c==='$');document.getElementById('gBs').classList.toggle('on',c==='Bs');updateMontoHint();}
+  function setFCur(c){fCurIn=c;document.getElementById('fUsd').classList.toggle('on',c==='$');document.getElementById('fBs').classList.toggle('on',c==='Bs');}
+  function updateMontoHint(){
+    const raw=parseFloat(document.getElementById('monto').value);const h=document.getElementById('montoHint');
+    if(!h)return;
+    if(isNaN(raw)){h.textContent='';return;}
+    if(gCurIn==='Bs')h.textContent=activeRate?('= $ '+num(raw/activeRate)):'cargando tasa…';
+    else h.textContent=activeRate?('= Bs '+numBs(raw*activeRate)):'';
   }
   function saveF(){try{localStorage.setItem('fijos',JSON.stringify(fijos));}catch(e){}scheduleSync();}
   function saveG(){try{localStorage.setItem('gastos',JSON.stringify(gastos));}catch(e){}scheduleSync();}
@@ -597,21 +694,26 @@
 
   function addFijo(){
     const d=document.getElementById('fDesc').value.trim();
-    const m=parseFloat(document.getElementById('fMonto').value)||0;
+    const raw=parseFloat(document.getElementById('fMonto').value)||0;
     if(!d)return;
-    fijos.push({id:Date.now(),desc:d,cat:document.getElementById('fCat').value,monto:m});
+    if(fCurIn==='Bs'&&!activeRate){alert('Esperá unos segundos a que carguen las tasas de cambio.');return;}
+    const usd=fCurIn==='$'?raw:(activeRate?raw/activeRate:0);
+    fijos.push({id:Date.now(),desc:d,cat:document.getElementById('fCat').value,monto:usd,in:{cur:fCurIn,amount:raw}});
     document.getElementById('fDesc').value='';document.getElementById('fMonto').value='';
     saveF();render();
   }
-  function setFijo(id,v){const f=fijos.find(x=>x.id===id);if(f){f.monto=parseFloat(v)||0;saveF();renderResumen();renderFijos();}}
+  function setFijo(id,v){const f=fijos.find(x=>x.id===id);if(f){const val=parseFloat(v)||0;f.monto=cur==='$'?val:(activeRate?val/activeRate:f.monto);saveF();renderResumen();renderFijos();renderAccount();}}
   function delFijo(id){fijos=fijos.filter(x=>x.id!==id);saveF();render();}
 
   function addGasto(){
     const d=document.getElementById('desc').value.trim();
-    const m=parseFloat(document.getElementById('monto').value);
-    if(!d||isNaN(m))return;
-    gastos.push({id:Date.now(),desc:d,monto:m,cat:document.getElementById('cat').value,fecha:document.getElementById('fecha').value});
-    document.getElementById('desc').value='';document.getElementById('monto').value='';
+    const raw=parseFloat(document.getElementById('monto').value);
+    if(!d||isNaN(raw))return;
+    if(gCurIn==='Bs'&&!activeRate){alert('Esperá unos segundos a que carguen las tasas de cambio.');return;}
+    const usd=gCurIn==='$'?raw:raw/activeRate;
+    gastos.push({id:Date.now(),desc:d,monto:usd,cat:document.getElementById('cat').value,fecha:document.getElementById('fecha').value,
+      in:{cur:gCurIn,amount:raw,rate:gCurIn==='Bs'?activeRate:null,src:rates.source}});
+    document.getElementById('desc').value='';document.getElementById('monto').value='';updateMontoHint();
     saveG();render();
   }
   function delGasto(id){gastos=gastos.filter(g=>g.id!==id);saveG();render();}
@@ -653,12 +755,48 @@
     alert('Listo, se borraron todos los datos.');
   }
 
+  function renderRates(){
+    const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+    set('rUsdBcv', rates.usdBcv?('Bs '+num(rates.usdBcv)):'—');
+    set('rUsdBin', rates.usdBin?('Bs '+num(rates.usdBin)):'—');
+    set('rEurBcv', rates.eurBcv?('Bs '+num(rates.eurBcv)):'—');
+    const u=document.getElementById('ratesUpd');
+    if(u)u.textContent=rates.updated?('Actualizado '+new Date(rates.updated).toLocaleString('es-VE')+' · fuente DolarAPI'):'Tocá Actualizar para traer las tasas';
+    ['bcv','binance','custom'].forEach(s=>{const b=document.getElementById('src_'+s);if(b)b.classList.toggle('on',rates.source===s);});
+    const tb=document.getElementById('tileBcv'),ti=document.getElementById('tileBin');
+    if(tb)tb.classList.toggle('act',rates.source==='bcv');
+    if(ti)ti.classList.toggle('act',rates.source==='binance');
+    const ci=document.getElementById('customRate'); if(ci&&document.activeElement!==ci&&rates.custom)ci.value=rates.custom;
+  }
+  function renderKpis(){
+    const hoy=new Date().toISOString().slice(0,7), d=new Date();
+    const monthG=gastos.filter(g=>mk(g.fecha)===hoy);
+    const tv=monthG.reduce((s,g)=>s+(+g.monto||0),0), tf=totalFijos(), total=tf+tv;
+    const prom=d.getDate()?tv/d.getDate():0;
+    const mayor=monthG.reduce((m,g)=>Math.max(m,+g.monto||0),0);
+    const prevKey=new Date(d.getFullYear(),d.getMonth()-1,1).toISOString().slice(0,7);
+    const prevVar=varMes(prevKey);
+    const delta=prevVar>0?((tv-prevVar)/prevVar*100):(tv>0?100:0);
+    const cat={};fijos.forEach(f=>{if(+f.monto>0)cat[f.cat]=(cat[f.cat]||0)+ +f.monto;});monthG.forEach(g=>cat[g.cat]=(cat[g.cat]||0)+ +g.monto);
+    const top=Object.entries(cat).sort((a,b)=>b[1]-a[1])[0];
+    const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+    set('kMov',monthG.length);
+    set('kProm',fmtS(prom));
+    set('kMayor',fmtS(mayor));
+    const kd=document.getElementById('kDelta');
+    if(kd){kd.textContent=(delta>=0?'+':'')+Math.round(delta)+'%';kd.style.color=delta>0?'#ff3b30':(delta<0?'#16a34a':'var(--ink)');}
+    set('kTop',top?((ICON[top[0]]||'')+' '+top[0]):'—');
+    set('kBs',activeRate?('Bs '+numBs(total*activeRate)):'—');
+  }
+
   function renderResumen(){
     const hoy=new Date().toISOString().slice(0,7);
     const tf=totalFijos(), tv=varMes(hoy);
-    document.getElementById('heroVal').textContent=num(tf+tv);
+    document.getElementById('heroVal').textContent=num(disp(tf+tv));
+    document.getElementById('heroAlt').textContent=fmtOther(tf+tv);
     document.getElementById('sFijos').textContent=fmtS(tf);
     document.getElementById('sVar').textContent=fmtS(tv);
+    renderRates();renderKpis();
 
     const cat={};
     fijos.forEach(f=>{if(+f.monto>0)cat[f.cat]=(cat[f.cat]||0)+(+f.monto);});
@@ -701,14 +839,14 @@
   }
 
   function renderFijos(){
-    document.getElementById('fijosVal').textContent=num(totalFijos());
+    document.getElementById('fijosVal').textContent=num(disp(totalFijos()));
     const box=document.getElementById('fijosCard');
     box.innerHTML=fijos.length?fijos.map(f=>{
       const col=C[f.cat]||'#a0a0a8';
       return '<div class="frow">'+
         '<span class="dot" style="background:'+col+'22;color:'+col+'">'+(ICON[f.cat]||'\u2022')+'</span>'+
         '<div class="nm">'+esc(f.desc)+'<small>'+f.cat+'</small></div>'+
-        '<input class="minput" type="number" step="0.01" min="0" value="'+(f.monto||'')+'" placeholder="0.00" onchange="setFijo('+f.id+',this.value)">'+
+        '<input class="minput" type="number" step="0.01" min="0" value="'+(f.monto?(cur==="$"?Math.round(f.monto*100)/100:Math.round(disp(f.monto))):"")+'" placeholder="0.00" onchange="setFijo('+f.id+',this.value)">'+
         '<button class="del" onclick="delFijo('+f.id+')">\u00d7</button>'+
       '</div>';
     }).join(''):'<div class="empty">No hay gastos fijos. Agrega uno abajo.</div>';
@@ -727,7 +865,7 @@
       return '<div class="row">'+
         '<span class="dot" style="background:'+col+'22;color:'+col+'">'+(ICON[g.cat]||'\u2022')+'</span>'+
         '<div class="meta"><div class="desc">'+esc(g.desc)+'</div><div class="tags">'+g.cat+' \u00b7 '+fe+'</div></div>'+
-        '<div class="amt" style="color:'+col+'">'+fmt(g.monto)+'</div>'+
+        '<div class="amtwrap"><div class="amt" style="color:'+col+'">'+fmt(g.monto)+'</div><div class="amtsub">'+fmtOther(g.monto)+'</div></div>'+
         '<button class="del" onclick="delGasto('+g.id+')">\u00d7</button>'+
       '</div>';
     }).join(''):'<div class="empty">A\u00fan no hay gastos variables.</div>';
